@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>voltronic-hid-exporter</AssemblyName>
+    <RootNamespace>VoltronicHidExporter</RootNamespace>
+    <Version>0.1.0</Version>
+    <Authors>Jacobo de Vera</Authors>
+    <Description>Read-only Prometheus exporter for Voltronic-QS UPS devices over USB HID.</Description>
+    <RepositoryUrl>https://github.com/jdevera/voltronic-hid-exporter</RepositoryUrl>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HidSharp" Version="2.6.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+</Project>

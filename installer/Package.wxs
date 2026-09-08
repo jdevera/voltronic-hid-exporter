@@ -1,0 +1,55 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package
+      Name="Voltronic HID Exporter"
+      Manufacturer="Jacobo de Vera"
+      Version="$(var.ProductVersion)"
+      UpgradeCode="8A638CA2-E06E-4F83-8D94-EDE4A79F28B5"
+      Language="1033"
+      Scope="perMachine">
+    <SummaryInformation Description="Read-only Prometheus exporter for Voltronic-QS USB HID UPS devices" />
+    <MajorUpgrade
+        DowngradeErrorMessage="A newer version of Voltronic HID Exporter is already installed."
+        Schedule="afterInstallInitialize" />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Voltronic HID Exporter">
+        <Component Id="ExporterServiceComponent" Guid="BE29CCB3-9AC3-4AAB-9202-34758AA66B42" Bitness="always64">
+          <File
+              Id="ExporterExecutable"
+              Source="$(var.PublishDir)/voltronic-hid-exporter.exe"
+              KeyPath="yes" />
+          <ServiceInstall
+              Id="ExporterServiceInstall"
+              Name="VoltronicHidExporter"
+              DisplayName="Voltronic HID Exporter"
+              Description="Exports read-only Voltronic-QS UPS telemetry for Prometheus."
+              Type="ownProcess"
+              Start="auto"
+              ErrorControl="normal"
+              Account="LocalSystem">
+            <ServiceDependency Id="Tcpip" />
+            <util:ServiceConfig
+                FirstFailureActionType="restart"
+                SecondFailureActionType="restart"
+                ThirdFailureActionType="restart"
+                ResetPeriodInDays="1"
+                RestartServiceDelayInSeconds="10" />
+          </ServiceInstall>
+          <ServiceControl
+              Id="ExporterServiceControl"
+              Name="VoltronicHidExporter"
+              Start="install"
+              Stop="both"
+              Remove="uninstall"
+              Wait="yes" />
+        </Component>
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Voltronic HID Exporter" Level="1">
+      <ComponentRef Id="ExporterServiceComponent" />
+    </Feature>
+  </Package>
+</Wix>
