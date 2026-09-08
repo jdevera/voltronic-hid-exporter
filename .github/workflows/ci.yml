@@ -9,14 +9,14 @@ jobs:
   test-and-package:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
       - name: Test and build release artifacts
         shell: pwsh
         run: ./scripts/build-release.ps1 -Version 0.1.0
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: voltronic-hid-exporter-win-x64
           path: artifacts/release/*
