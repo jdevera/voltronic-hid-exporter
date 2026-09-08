@@ -107,7 +107,7 @@ USB transport uses [HidSharp](https://github.com/IntergatedCircuits/HidSharp).
 
 ## Development
 
-Build, test, and package with the .NET 8 SDK on Windows:
+Build, test, and package with the latest stable .NET 10 SDK on Windows:
 
 ```powershell
 .\scripts\build-release.ps1 -Version 0.1.0
