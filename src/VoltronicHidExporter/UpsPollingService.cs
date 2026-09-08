@@ -2,6 +2,7 @@ namespace VoltronicHidExporter;
 
 public sealed class UpsPollingService(
     ExporterOptions options,
+    HidAccessCoordinator accessCoordinator,
     HidUpsClient client,
     WindowsBatteryReader batteryReader,
     ExporterState state,
@@ -16,6 +17,7 @@ public sealed class UpsPollingService(
         {
             try
             {
+                using var access = accessCoordinator.Acquire();
                 using var session = client.Open();
                 var protocol = VoltronicProtocol.ParseDialect(session.Query("M"));
                 var ratings = VoltronicProtocol.ParseRatings(session.Query("F"));

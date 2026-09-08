@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using System.Text.Json;
 
 namespace VoltronicHidExporter;
 
@@ -57,6 +58,42 @@ public sealed class MetricsServer(
                             "text/plain; charset=utf-8");
                         break;
                     }
+                case "/snapshot":
+                    {
+                        if (!IsLoopback(context.Request.RemoteEndPoint?.Address))
+                        {
+                            await WriteAsync(
+                                context.Response,
+                                HttpStatusCode.Forbidden,
+                                "snapshot is available only from localhost\n",
+                                "text/plain; charset=utf-8");
+                            break;
+                        }
+
+                        var current = state.Read();
+                        if (current.LastSnapshot is null)
+                        {
+                            await WriteAsync(
+                                context.Response,
+                                HttpStatusCode.ServiceUnavailable,
+                                current.LastError ?? "no successful UPS poll is available\n",
+                                "text/plain; charset=utf-8");
+                            break;
+                        }
+
+                        await WriteAsync(
+                            context.Response,
+                            HttpStatusCode.OK,
+                            JsonSerializer.Serialize(
+                                current.LastSnapshot,
+                                new JsonSerializerOptions
+                                {
+                                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                    WriteIndented = true,
+                                }),
+                            "application/json; charset=utf-8");
+                        break;
+                    }
                 default:
                     await WriteAsync(
                         context.Response,
@@ -71,6 +108,17 @@ public sealed class MetricsServer(
             logger.LogWarning(exception, "Failed to serve metrics request");
             context.Response.Abort();
         }
+    }
+
+    private static bool IsLoopback(IPAddress? address)
+    {
+        if (address is null)
+        {
+            return false;
+        }
+
+        return IPAddress.IsLoopback(
+            address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address);
     }
 
     private static async Task WriteAsync(

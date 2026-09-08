@@ -50,7 +50,7 @@ public static class Program
 
         if (command == "probe")
         {
-            return RunProbe(options);
+            return await RunProbeAsync(options);
         }
 
         var builder = Host.CreateApplicationBuilder(Array.Empty<string>());
@@ -58,6 +58,7 @@ public static class Program
         builder.Services.AddWindowsService(service => service.ServiceName = ServiceName);
         builder.Services.AddSingleton(options);
         builder.Services.AddSingleton<ExporterState>();
+        builder.Services.AddSingleton<HidAccessCoordinator>();
         builder.Services.AddSingleton<HidUpsClient>();
         builder.Services.AddSingleton<WindowsBatteryReader>();
         builder.Services.AddSingleton<RawCaptureWriter>();
@@ -83,11 +84,36 @@ public static class Program
             .Build();
     }
 
-    private static int RunProbe(ExporterOptions options)
+    private static async Task<int> RunProbeAsync(ExporterOptions options)
     {
         using var loggerFactory = LoggerFactory.Create(logging => logging.AddSimpleConsole());
         try
         {
+            var serviceSnapshot = await ServiceSnapshotClient.TryReadAsync(options);
+            if (serviceSnapshot is not null)
+            {
+                if (serviceSnapshot.Success)
+                {
+                    Console.WriteLine(serviceSnapshot.Body);
+                    return 0;
+                }
+
+                Console.Error.WriteLine(
+                    $"The running exporter service could not provide a current snapshot: {serviceSnapshot.Body}");
+                return 1;
+            }
+
+            var serviceActivity = ServiceSnapshotClient.GetServiceActivity(ServiceName);
+            if (serviceActivity != ServiceActivity.StoppedOrAbsent)
+            {
+                Console.Error.WriteLine(
+                    "The exporter service is active, but its local snapshot endpoint is unavailable. " +
+                    "Refusing to open the UPS HID interface concurrently.");
+                return 1;
+            }
+
+            var accessCoordinator = new HidAccessCoordinator(options);
+            using var access = accessCoordinator.Acquire();
             var client = new HidUpsClient(options);
             using var session = client.Open();
             var protocol = VoltronicProtocol.ParseDialect(session.Query("M"));

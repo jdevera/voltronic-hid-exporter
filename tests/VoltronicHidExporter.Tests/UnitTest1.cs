@@ -131,3 +131,15 @@ public sealed class PrometheusRendererTests
         Assert.Contains("vendor_id=\"1234\",product_id=\"ABCD\"", metrics);
     }
 }
+
+public sealed class ServiceSnapshotClientTests
+{
+    [Theory]
+    [InlineData("http://127.0.0.1:9199/", "http://127.0.0.1:9199/snapshot")]
+    [InlineData("http://+:9199/", "http://127.0.0.1:9199/snapshot")]
+    [InlineData("http://*:9199/", "http://127.0.0.1:9199/snapshot")]
+    public void BuildsALoopbackSnapshotUri(string listenPrefix, string expected)
+    {
+        Assert.Equal(expected, ServiceSnapshotClient.BuildLoopbackUri(listenPrefix, "/snapshot").ToString());
+    }
+}

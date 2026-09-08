@@ -36,8 +36,12 @@ installing the service:
 .\voltronic-hid-exporter-0.1.0-win-x64.exe probe
 ```
 
-Do not run `probe` while the service or another program is reading the same
-HID interface.
+When the exporter service is running, `probe` reads its latest snapshot over
+localhost instead of opening the HID interface again. Otherwise it takes a
+machine-wide lock before querying the UPS directly, so multiple copies of this
+program cannot interleave commands and replies. Unrelated programs such as
+ViewPower do not participate in that lock and should not be left running with
+the exporter.
 
 ## Configuration
 
