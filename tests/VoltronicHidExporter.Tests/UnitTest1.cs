@@ -143,3 +143,27 @@ public sealed class ServiceSnapshotClientTests
         Assert.Equal(expected, ServiceSnapshotClient.BuildLoopbackUri(listenPrefix, "/snapshot").ToString());
     }
 }
+
+public sealed class HidAccessCoordinatorTests
+{
+    [Fact]
+    public async Task RefusesASecondReaderOnAnotherThread()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var options = new ExporterOptions
+        {
+            InterfaceToken = $"MI_TEST_{Guid.NewGuid():N}",
+        };
+        var firstCoordinator = new HidAccessCoordinator(options);
+        var secondCoordinator = new HidAccessCoordinator(options);
+
+        using var firstLease = firstCoordinator.Acquire();
+
+        await Task.Run(() =>
+            Assert.Throws<IOException>(() => secondCoordinator.Acquire()));
+    }
+}

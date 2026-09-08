@@ -33,7 +33,7 @@ The standalone release EXE is also usable for a one-off diagnostic without
 installing the service:
 
 ```powershell
-.\voltronic-hid-exporter-0.1.1-win-x64.exe probe
+.\voltronic-hid-exporter-0.1.2-win-x64.exe probe
 ```
 
 When the exporter service is running, `probe` reads its latest snapshot over

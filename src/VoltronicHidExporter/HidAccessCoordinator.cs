@@ -4,14 +4,14 @@ namespace VoltronicHidExporter;
 
 public sealed class HidAccessCoordinator(ExporterOptions options)
 {
-    private readonly string _mutexName = BuildMutexName(options);
+    private readonly string _semaphoreName = BuildSemaphoreName(options);
 
     public IDisposable Acquire()
     {
-        Mutex mutex;
+        Semaphore semaphore;
         try
         {
-            mutex = new Mutex(false, _mutexName);
+            semaphore = new Semaphore(1, 1, _semaphoreName);
         }
         catch (UnauthorizedAccessException exception)
         {
@@ -22,32 +22,22 @@ public sealed class HidAccessCoordinator(ExporterOptions options)
 
         try
         {
-            var acquired = false;
-            try
-            {
-                acquired = mutex.WaitOne(0);
-            }
-            catch (AbandonedMutexException)
-            {
-                acquired = true;
-            }
-
-            if (!acquired)
+            if (!semaphore.WaitOne(0))
             {
                 throw new IOException(
                     "The UPS HID interface is already in use by another exporter process.");
             }
 
-            return new MutexLease(mutex);
+            return new SemaphoreLease(semaphore);
         }
         catch
         {
-            mutex.Dispose();
+            semaphore.Dispose();
             throw;
         }
     }
 
-    private static string BuildMutexName(ExporterOptions options)
+    private static string BuildSemaphoreName(ExporterOptions options)
     {
         var interfaceToken = new StringBuilder(options.InterfaceToken.Length);
         foreach (var character in options.InterfaceToken)
@@ -58,7 +48,7 @@ public sealed class HidAccessCoordinator(ExporterOptions options)
         return $"Global\\VoltronicHidExporter.Hid.{options.VendorId:X4}.{options.ProductId:X4}.{interfaceToken}";
     }
 
-    private sealed class MutexLease(Mutex mutex) : IDisposable
+    private sealed class SemaphoreLease(Semaphore semaphore) : IDisposable
     {
         private bool _disposed;
 
@@ -69,8 +59,8 @@ public sealed class HidAccessCoordinator(ExporterOptions options)
                 return;
             }
 
-            mutex.ReleaseMutex();
-            mutex.Dispose();
+            semaphore.Release();
+            semaphore.Dispose();
             _disposed = true;
         }
     }
