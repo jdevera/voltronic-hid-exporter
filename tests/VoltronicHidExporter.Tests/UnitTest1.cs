@@ -129,6 +129,8 @@ public sealed class PrometheusRendererTests
         Assert.Contains("voltronic_hid_input_voltage_volts 226.5", metrics);
         Assert.Contains("voltronic_hid_windows_battery_charge_percent 97", metrics);
         Assert.Contains("vendor_id=\"1234\",product_id=\"ABCD\"", metrics);
+        Assert.DoesNotContain('\r', metrics);
+        Assert.EndsWith("\n", metrics, StringComparison.Ordinal);
     }
 }
 

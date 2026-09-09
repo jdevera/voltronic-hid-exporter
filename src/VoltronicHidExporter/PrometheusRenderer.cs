@@ -17,11 +17,11 @@ public static class PrometheusRenderer
         Counter(output, "voltronic_hid_utility_losses_total", "Total observed transitions to battery power.", state.UtilityLosses);
 
         var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown";
-        output.AppendLine("# HELP voltronic_hid_exporter_build_info Exporter build information.");
-        output.AppendLine("# TYPE voltronic_hid_exporter_build_info gauge");
+        output.Append("# HELP voltronic_hid_exporter_build_info Exporter build information.\n");
+        output.Append("# TYPE voltronic_hid_exporter_build_info gauge\n");
         output.Append("voltronic_hid_exporter_build_info{version=\"")
             .Append(EscapeLabel(version))
-            .AppendLine("\"} 1");
+            .Append("\"} 1\n");
 
         if (state.LastUtilityLoss is not null)
         {
@@ -52,15 +52,15 @@ public static class PrometheusRenderer
             "Unix timestamp of the most recent successful UPS poll.",
             snapshot.Timestamp.ToUnixTimeSeconds());
 
-        output.AppendLine("# HELP voltronic_hid_ups_info Static UPS identity information.");
-        output.AppendLine("# TYPE voltronic_hid_ups_info gauge");
+        output.Append("# HELP voltronic_hid_ups_info Static UPS identity information.\n");
+        output.Append("# TYPE voltronic_hid_ups_info gauge\n");
         output.Append("voltronic_hid_ups_info{protocol=\"")
             .Append(EscapeLabel(snapshot.Protocol))
             .Append("\",vendor_id=\"")
             .Append(options.VendorId.ToString("X4", MetricsCulture))
             .Append("\",product_id=\"")
             .Append(options.ProductId.ToString("X4", MetricsCulture))
-            .AppendLine("\"} 1");
+            .Append("\"} 1\n");
 
         Gauge(output, "voltronic_hid_input_voltage_volts", "UPS input voltage.", snapshot.Telemetry.InputVoltage);
         Gauge(output, "voltronic_hid_input_fault_voltage_volts", "UPS input-fault voltage retained by the device.", snapshot.Telemetry.InputFaultVoltage);
@@ -120,16 +120,16 @@ public static class PrometheusRenderer
 
     private static void Gauge(StringBuilder output, string name, string help, double value)
     {
-        output.Append("# HELP ").Append(name).Append(' ').AppendLine(help);
-        output.Append("# TYPE ").Append(name).AppendLine(" gauge");
-        output.Append(name).Append(' ').AppendLine(value.ToString("G17", MetricsCulture));
+        output.Append("# HELP ").Append(name).Append(' ').Append(help).Append('\n');
+        output.Append("# TYPE ").Append(name).Append(" gauge\n");
+        output.Append(name).Append(' ').Append(value.ToString("G17", MetricsCulture)).Append('\n');
     }
 
     private static void Counter(StringBuilder output, string name, string help, long value)
     {
-        output.Append("# HELP ").Append(name).Append(' ').AppendLine(help);
-        output.Append("# TYPE ").Append(name).AppendLine(" counter");
-        output.Append(name).Append(' ').AppendLine(value.ToString(MetricsCulture));
+        output.Append("# HELP ").Append(name).Append(' ').Append(help).Append('\n');
+        output.Append("# TYPE ").Append(name).Append(" counter\n");
+        output.Append(name).Append(' ').Append(value.ToString(MetricsCulture)).Append('\n');
     }
 
     private static string EscapeLabel(string value) => value
